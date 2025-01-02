@@ -13,6 +13,21 @@ npx safe-start [options] [main]
 
 It requires a configuration file, by default `safe-start.json` in the current working directory.
 You can specify a different file using the `--config` option.
+The `safe-start.json` file should be in the following format:
+
+```json
+{
+    "permission": {
+        "allow-addons": true,
+        // All flags related to permission model
+    },
+    "flags": { // Optional
+        "experimental-strip-types": true,
+        // All other flags
+    }
+}
+```
+
 Values can be either a string or an array of strings.
 Possible options are:
 
@@ -25,8 +40,10 @@ Possible options are:
 
 ```json
 {
-    "allow-addons": true,
-    "allow-fs-write": "/foo/*",
-    "allow-fs-read": ["./bar/*", "./baz/*"],
+    "permission": {
+        "allow-addons": true,
+        "allow-fs-write": "/foo/*",
+        "allow-fs-read": ["./bar/*", "./baz/*"],
+    }
 }
 ```
