@@ -1,0 +1,20 @@
+{
+	"name": "safe-start",
+	"version": "0.0.0",
+	"description": "Start Node.js with permission model",
+	"bin": "./dist/main.js",
+	"scripts": {
+		"typecheck": "tsc --noEmit",
+		"build": "tsc",
+		"lint": "biome lint --write",
+		"format": "biome format --write",
+		"ci": "biome ci",
+		"ci:fix": "biome check --write"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^1.9.4",
+		"typescript": "^5.7.2"
+	},
+	"author": "Marco Ippolito",
+	"license": "MIT"
+}
