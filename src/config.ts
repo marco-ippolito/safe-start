@@ -1,59 +1,129 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
-const flags = [
+const booleanFlags = [
 	"allow-addons",
 	"allow-child",
-	"allow-fs-read",
-	"allow-fs-write",
 	"allow-wasi",
 	"allow-worker",
 ] as const;
 
-type Flag = (typeof flags)[number];
+const stringFlags = ["allow-fs-read", "allow-fs-write"] as const;
 
-export type Configuration = {
-	[K in Flag]: string[] | string;
+type BooleanPermissionFlag = (typeof booleanFlags)[number];
+type StringPermissionFlag = (typeof stringFlags)[number];
+type PermissionFlag = BooleanPermissionFlag | StringPermissionFlag;
+type GenericFlag = string | string[] | boolean;
+
+type Configuration = {
+	permission: PermissionConfiguration;
+	flags?: Record<string, string[]>;
 };
 
-export type ResolvedConfiguration = {
-	[K in keyof Configuration]: string[];
+type PermissionConfiguration = {
+	[K in PermissionFlag]?: K extends BooleanPermissionFlag
+	? boolean
+	: string[] | string;
 };
 
-export function readConfigFile(path: string) {
+type ResolvedPermissionConfiguration = {
+	[K in StringPermissionFlag | BooleanPermissionFlag]: string[];
+};
+
+export type ResolvedConfig = {
+	permission: ResolvedPermissionConfiguration;
+	flags: Record<string, string[]>;
+};
+
+export function readConfigFile(path: string): Configuration {
 	try {
 		const file = readFileSync(path, "utf8");
-		return JSON.parse(file);
+		return JSON.parse(file) as Configuration;
 	} catch (error) {
 		throw new Error(`Failed to read config file: ${error.message}`);
 	}
 }
 
-export function configToFlags(config: Configuration) {
-	const result = {} as ResolvedConfiguration;
-	const allowedFlags = new Set(flags);
+export function permissionConfigToArgs(
+	permissionConfig: PermissionConfiguration,
+): ResolvedPermissionConfiguration {
+	const result = {};
 
-	for (const entry of Object.entries(config)) {
-		const [key, value] = entry;
-		if (!allowedFlags.has(key as Flag)) {
+	for (const [key, value] of Object.entries(permissionConfig)) {
+		// Initialize the array for the flag
+		result[key] = [];
+
+		// Check if the key is a boolean flag like --allow-wasi
+		if (booleanFlags.includes(key as BooleanPermissionFlag)) {
+			if (typeof value !== "boolean") {
+				throw new Error(`Invalid value for boolean flag: ${key}`);
+			}
+			if (value) {
+				result[key].push(`--${key}`);
+			} else {
+				console.log(`Skipping ${key} flag`);
+			}
+			// Check if the key is a string flag like --allow-fs-read
+		} else if (stringFlags.includes(key as StringPermissionFlag)) {
+			// Value could be either string or array of strings
+			const paths = Array.isArray(value) ? value : [value];
+			for (const item of paths) {
+				if (typeof item !== "string") {
+					throw new Error(`Invalid value for string flag: ${key}`);
+				}
+				// For each value (a, b) we pass it as --flag=a and --flag=b
+				const resolved = resolveConfigItem(`--${key}`, item.trim());
+				result[key].push(resolved);
+			}
+		} else {
 			throw new Error(`Invalid flag: ${key}`);
 		}
-		result[key] = [];
-		// If the value is an array, we need to iterate over each item
-		// and resolve the path to the item.
-		const paths = Array.isArray(value) ? value : [value];
+	}
 
+	return result as ResolvedPermissionConfiguration;
+}
+
+function flagsConfigToArgs(
+	flagsConfig: Record<string, GenericFlag>,
+): Record<string, string[]> {
+	const result = {};
+	for (const [key, value] of Object.entries(flagsConfig)) {
+		// Initialize the array for the flag
+		result[key] = [];
+
+		if (typeof value === "boolean") {
+			if (value) {
+				result[key].push(`--${key}`);
+			} else {
+				console.log(`Skipping ${key} flag`);
+			}
+			continue;
+		}
+
+		// Value could be either string or array of strings
+		const paths = Array.isArray(value) ? value : [value];
 		for (const item of paths) {
-			const resolved = resolveConfigItem(`--${key}`, item.trim());
+			// For each value (a, b) we pass it as --flag=a and --flag=b
+			const resolved = `--${key}=${item}`;
 			result[key].push(resolved);
 		}
 	}
 	return result;
 }
 
-function resolveConfigItem(flag: string, item: string) {
+export function configToFlags(config: Configuration) {
+	if (!config.permission) {
+		throw new Error("Invalid configuration, missing permission field");
+	}
+	return {
+		permission: permissionConfigToArgs(config.permission),
+		flags: flagsConfigToArgs(config.flags || {}),
+	};
+}
+
+function resolveConfigItem(flag: string, item: string): string {
 	// Skip if the item is a wildcard
-	if (item.trim() !== "*") {
+	if (item !== "*") {
 		const resolvedItem = resolve(item);
 		return `${flag}=${resolvedItem}`;
 	}

@@ -1,6 +1,10 @@
-import { fork, spawn } from "node:child_process";
+import { spawn } from "node:child_process";
 import { parseArgs } from "node:util";
-import { configToFlags, readConfigFile } from "./config.ts";
+import {
+	type ResolvedConfig,
+	configToFlags,
+	readConfigFile,
+} from "./config.ts";
 
 const DEFAULT_CONFIG_PATH = "safestart.json";
 
@@ -34,11 +38,17 @@ export function main() {
 	});
 }
 
-function startNode(resolvedConfig, main) {
-	const flags = Object.values(resolvedConfig) as string[];
-	console.log(flags);
-	return spawn("node", ["--permission", ...flags, main], {
-		detached: true,
-		stdio: "inherit",
-	});
+function startNode(resolvedConfig: ResolvedConfig, main: string) {
+	const { permission, flags } = resolvedConfig;
+	const permissionFlags = Object.values(permission).flat();
+	const genericFlags = Object.values(flags).flat();
+
+	return spawn(
+		"node",
+		["--permission", ...genericFlags, ...permissionFlags, main],
+		{
+			detached: true,
+			stdio: "inherit",
+		},
+	);
 }

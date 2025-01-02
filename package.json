@@ -11,7 +11,7 @@
 		"format": "biome format --write",
 		"ci": "biome ci",
 		"ci:fix": "biome check --write",
-		"test": "node --disable-warning=ExperimentalWarning,SecurityWarning --experimental-strip-types --test"
+		"test": "node --disable-warning=ExperimentalWarning --experimental-strip-types --test"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^1.9.4",

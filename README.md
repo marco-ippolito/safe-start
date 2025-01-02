@@ -10,3 +10,23 @@ You can run the tool directly without installing it globally by using `npx`:
 ```sh
 npx safe-start [options] [main]
 ```
+
+It requires a configuration file, by default `safe-start.json` in the current working directory.
+You can specify a different file using the `--config` option.
+Values can be either a string or an array of strings.
+Possible options are:
+
+- `allow-addons`,
+- `allow-child`,
+- `allow-fs-read`,
+- `allow-fs-write`,
+- `allow-wasi`,
+- `allow-worker`,
+
+```json
+{
+    "allow-addons": true,
+    "allow-fs-write": "/foo/*",
+    "allow-fs-read": ["./bar/*", "./baz/*"],
+}
+```
