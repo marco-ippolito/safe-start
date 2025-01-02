@@ -22,8 +22,8 @@ type Configuration = {
 
 type PermissionConfiguration = {
 	[K in PermissionFlag]?: K extends BooleanPermissionFlag
-	? boolean
-	: string[] | string;
+		? boolean
+		: string[] | string;
 };
 
 type ResolvedPermissionConfiguration = {

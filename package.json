@@ -11,7 +11,8 @@
 		"format": "biome format --write",
 		"ci": "biome ci",
 		"ci:fix": "biome check --write",
-		"test": "node --disable-warning=ExperimentalWarning --experimental-strip-types --test"
+		"test": "node --disable-warning=ExperimentalWarning --experimental-strip-types --test",
+		"example": "npx . -c ./example/start-safe.json ./example/foo.ts"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^1.9.4",

@@ -1,0 +1,8 @@
+{
+	"flags": {
+		"experimental-strip-types": true
+	},
+	"permission": {
+		"allow-fs-read": ["./example/foo.ts"]
+	}
+}
