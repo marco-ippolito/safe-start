@@ -1,27 +1,11 @@
-#!/usr/bin/env node --permission --allow-fs-read=*
+#!/usr/bin/env node --permission --allow-fs-read=* --allow-child-process --disable-warning=SecurityWarning
 
-import { parseArgs } from "node:util";
-import { readConfigFile } from "./config.ts";
+import { styleText } from "node:util";
+import { main } from "./safe-start.ts";
 
-const DEFAULT_CONFIG_PATH = "safestart.json";
-
-const { values, positionals } = parseArgs({
-	allowPositionals: true,
-	options: {
-		config: {
-			type: "string",
-			short: "c",
-			optional: true,
-		},
-	},
-});
-
-const { config } = values;
-
-const content = readConfigFile(config || DEFAULT_CONFIG_PATH);
-
-if (!content) {
+try {
+	main();
+} catch (error) {
+	console.error(styleText("red", `[ERROR]: ${error.message}`));
 	process.exit(1);
 }
-
-const [main] = positionals;

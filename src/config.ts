@@ -1,5 +1,4 @@
 import { readFileSync } from "node:fs";
-import { styleText } from "node:util";
 import { resolve } from "node:path";
 
 const flags = [
@@ -26,7 +25,7 @@ export function readConfigFile(path: string) {
 		const file = readFileSync(path, "utf8");
 		return JSON.parse(file);
 	} catch (error) {
-		console.error(styleText("red", `Config file "${path}" not found!`));
+		throw new Error(`Failed to read config file: ${error.message}`);
 	}
 }
 
@@ -53,6 +52,7 @@ export function configToFlags(config: Configuration) {
 }
 
 function resolveConfigItem(flag: string, item: string) {
+	// Skip if the item is a wildcard
 	if (item.trim() !== "*") {
 		const resolvedItem = resolve(item);
 		return `${flag}=${resolvedItem}`;
